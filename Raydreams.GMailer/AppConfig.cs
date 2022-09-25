@@ -2,32 +2,42 @@
 
 namespace Raydreams.GMailer
 {
-    /// <summary>Loads values from the App Settings JSON environment files</summary>
+    /// <summary>Loads config values from the App Settings JSON environment files</summary>
     public class AppConfig
     {
         private int _top = 1;
 
-        /// <summary>What environment is this</summary>
-        public string? Environment { get; set; }
+        private string _toName = "unknown";
 
-        /// <summary>The GMail User</summary>
+        /// <summary>What environment is this</summary>
+        public string Environment { get; set; } = "DEV";
+
+        /// <summary>The GMail User ID. The mailbox to read and forward from.</summary>
         public string? UserID { get; set; }
 
-        /// <summary></summary>
-        public string? ForwardTo { get; set; }
+        /// <summary>The email address to forward to</summary>
+        public string ForwardToAddress
+        {
+            get => !String.IsNullOrWhiteSpace( this._toName ) ? this._toName.Trim() : "unknown";
+            set => this._toName = value;
+        }
 
-        /// <summary></summary>
+        /// <summary>The name of the person to forward to</summary>
+        public string? ForwardToName { get; set; }
+
+        /// <summary>GMail API Client ID</summary>
         public string? ClientID { get; set; }
 
-        /// <summary></summary>
+        /// <summary>GMail API Secret</summary>
         public string? ClientSecret { get; set; }
 
-        /// <summary></summary>
+        /// <summary>The number of messages to read sorted descendding most recent</summary>
         public int Top
         {
-            set { Math.Clamp( value, 1, 500 ); }
-            get => this._top;
+            set => this._top = value;
+            get => Math.Clamp( this._top, 1, 500 );
         }
+
     }
 }
 
