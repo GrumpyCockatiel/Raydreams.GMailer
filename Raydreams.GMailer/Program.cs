@@ -16,6 +16,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Raydreams.GMailer
 {
+    /// <summary></summary>
     public class GMailer
     {
         static int Main( string[] args )
@@ -35,6 +36,8 @@ namespace Raydreams.GMailer
             return 0;
         }
 
+        /// <summary>Constructor</summary>
+        /// <param name="settings"></param>
         public GMailer( AppConfig settings )
         {
             this.Settings = settings;
@@ -47,16 +50,14 @@ namespace Raydreams.GMailer
         /// <summary></summary>
         private AppConfig Settings { get; set; }
 
-        /// <summary>Email address to forward to</summary>
-        //public string? Forward => this.Settings.ForwardToAddress;
-
+        /// <summary>The mailbox to forward to</summary>
         public MailboxAddress? ForwardTo { get; set; }
 
-        /// <summary></summary>
+        /// <summary>GMail User ID</summary>
         public string? UserID => this.Settings.UserID;
 
-        /// <summary></summary>
-        public GmailService? Host {get; set; }
+        /// <summary>Mail Service</summary>
+        protected GmailService? Host {get; set; }
 
         /// <summary></summary>
         protected List<Message> Messages { get; set; } = new List<Message>();
@@ -100,7 +101,7 @@ namespace Raydreams.GMailer
                 Console.WriteLine( "access token OK - continue" );
             }
 
-            // set the host
+            // init the host
             this.Host = new GmailService( new BaseClientService.Initializer() { HttpClientInitializer = credential } );
 
             // get messages
@@ -181,11 +182,7 @@ namespace Raydreams.GMailer
                 return null;
 
             // save the old values for later use
-            string subject = message.Subject;
-            string from = message.From.ToString();
-            string date = message.Date.ToString();
-            string to = message.To.ToString();
-            string cc = message.Cc.ToString();
+            OriginalHeader original = new OriginalHeader(message);
 
             // scan for the text areas and add the orginal info
             foreach ( MimeEntity part in message.BodyParts)
@@ -193,19 +190,14 @@ namespace Raydreams.GMailer
                 if ( part.ContentType.MimeType.Contains("text") && part is TextPart tp )
                 {
                     if ( tp.IsPlain )
-                        tp.Text = $"{FormatPlainHeader( from, subject, date, to, cc )}{tp.Text}";
+                        tp.Text = $"{original.ToPlainString()}{tp.Text}";
                     else if ( tp.IsHtml )
                     {
+                        // search for the body tag
                         Match m = new Regex( @"<body(.+)>", RegexOptions.IgnoreCase ).Match( tp.Text );
 
-                        if ( m.Success )
-                        {
-                            tp.Text = tp.Text.Insert( m.Index, FormatHTMLHeader( from, subject, date, to, cc ) );
-                        }
-                        else
-                        {
-                            tp.Text = tp.Text.Insert( 0, FormatHTMLHeader( from, subject, date, to, cc ) );
-                        }
+                        int idx = ( m.Success ) ? m.Index : 0;
+                        tp.Text = tp.Text.Insert( idx, original.ToHTMLHeader() );
                     }
                 }
             }
@@ -228,51 +220,6 @@ namespace Raydreams.GMailer
             var sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
 
             return sent;
-        }
-
-        /// <summary></summary>
-        /// <param name="from"></param>
-        /// <param name="sent"></param>
-        /// <param name="to"></param>
-        /// <param name="cc"></param>
-        /// <param name="subject"></param>
-        /// <returns></returns>
-        protected static string FormatPlainHeader(string from, string subject, string sent, string to, string cc)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine( "________________________________   " );
-            //sb.AppendLine( $"TAG Digital Studios   " );
-            sb.AppendLine( $"From: {from}   ");
-            sb.AppendLine( $"Subject: {subject}   " );
-            sb.AppendLine( $"Sent: {sent}   " );
-            sb.AppendLine( $"To: {to}   " );
-            sb.AppendLine( $"CC: {cc}   " );
-            sb.AppendLine( "________________________________   " );
-            sb.AppendLine( $"   " );
-
-            return sb.ToString();
-        }
-
-        /// <summary></summary>
-        /// <param name="from"></param>
-        /// <param name="subject"></param>
-        /// <param name="sent"></param>
-        /// <param name="to"></param>
-        /// <param name="cc"></param>
-        /// <returns></returns>
-        protected static string FormatHTMLHeader( string from, string subject, string sent, string to, string cc )
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append( "<p>" );
-            //sb.Append( $"TAG Digital Studios<br/>" );
-            sb.Append( $"From: {WebUtility.HtmlEncode(from)}<br/>" );
-            sb.Append( $"Subject: {subject}<br/>" );
-            sb.Append( $"Sent: {sent}<br/>" );
-            sb.Append( $"To: {WebUtility.HtmlEncode(to)}<br/>" );
-            sb.Append( $"CC: {WebUtility.HtmlEncode(cc)}<br/>" );
-            sb.Append( $"</p>" );
-
-            return sb.ToString();
         }
 
     }
