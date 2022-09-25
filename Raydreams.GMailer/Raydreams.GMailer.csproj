@@ -16,6 +16,7 @@
     <None Remove="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <None Remove="Microsoft.Extensions.Configuration.Json" />
     <None Remove="Microsoft.Extensions.Configuration.Binder" />
+    <None Remove="MimeKit" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Gmail.v1" Version="1.57.0.2650" />
@@ -23,6 +24,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
+    <PackageReference Include="MimeKit" Version="3.4.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
