@@ -6,7 +6,7 @@ using MimeKit;
 
 namespace Raydreams.GMailer
 {
-    /// <summary></summary>
+    /// <summary>Hold the original header info</summary>
     public record OriginalHeader
     {
         public OriginalHeader( MimeMessage message )
@@ -53,7 +53,7 @@ namespace Raydreams.GMailer
 
         /// <summary></summary>
         /// <returns></returns>
-        public string ToHTMLHeader()
+        public string ToHTMLString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append( "<p>" );

@@ -27,13 +27,24 @@ namespace Raydreams.GMailer
                 //.AddJsonFile( $"appsettings.{env}.json", true, true )
                 .AddEnvironmentVariables();
 
+            // init AppConfig
             IConfigurationRoot configurationRoot = builder.Build();
             AppConfig config = configurationRoot.GetSection( nameof( AppConfig ) ).Get<AppConfig>();
 
-            GMailer app = new GMailer( config );
-            app.Run();
+            int runResult = 0;
 
-            return 0;
+            try
+            {
+                GMailer app = new GMailer( config );
+                runResult = app.Run();
+            }
+            catch (System.Exception exp)
+            {
+                Console.WriteLine( exp.Message );
+                return -1;
+            }
+
+            return runResult;
         }
 
         /// <summary>Constructor</summary>
@@ -71,38 +82,9 @@ namespace Raydreams.GMailer
         /// <returns></returns>
         public int Run()
         {
-            string[] scopes = new string[] { "https://mail.google.com/", Oauth2Service.Scope.UserinfoEmail };
-
-            UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-            new ClientSecrets
-            {
-                ClientId = this.Settings.ClientID,
-                ClientSecret = this.Settings.ClientSecret
-            }, scopes, this.UserID, CancellationToken.None ).Result;
-
-            Console.WriteLine( "Authorization granted or not required (if the saved access token already available)" );
-
-            if ( credential.Token.IsExpired( credential.Flow.Clock ) )
-            {
-                Console.WriteLine( "The access token has expired, refreshing it" );
-
-                if ( credential.RefreshTokenAsync( CancellationToken.None ).Result )
-                {
-                    Console.WriteLine( "The access token is now refreshed" );
-                }
-                else
-                {
-                    Console.WriteLine( "The access token has expired but we can't refresh it" );
-                    return 0;
-                }
-            }
-            else
-            {
-                Console.WriteLine( "access token OK - continue" );
-            }
-
-            // init the host
-            this.Host = new GmailService( new BaseClientService.Initializer() { HttpClientInitializer = credential } );
+            // init the GMail Service
+            if ( !this.InitMailService() )
+                return -1;
 
             // get messages
             var msgIDs = this.ListMessages();
@@ -113,38 +95,88 @@ namespace Raydreams.GMailer
             // download the last Top messages
             this.DownloadMessages( msgIDs.Messages );
 
-            // forward
+            this.LogIt( $"Downloaded {msgIDs.Messages.Count} messages" );
+
+            // forward all the emails
             foreach ( Message next in this.Messages )
             {
-                var forwardResults = this.ForwardMessage( next );
+                try
+                {
+                    var forwardResults = this.ForwardMessage( next );
 
-                // add the ID of forwarded messages to a list
-                if ( forwardResults != null )
-                    this.Forwaded.Add( next.Id );
+                    // add the ID of forwarded messages to a list
+                    if ( forwardResults != null )
+                        this.Forwaded.Add( next.Id );
+                }
+                catch ( System.Exception exp )
+                {
+                    this.LogIt( exp.Message );
+                }
             }
 
             return 0;
         }
 
         /// <summary></summary>
-        /// <param name="initializer"></param>
+        /// <returns></returns>
+        protected bool InitMailService()
+        {
+            string[] scopes = new string[] { "https://mail.google.com/", Oauth2Service.Scope.UserinfoEmail };
+
+            UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+            new ClientSecrets
+            {
+                ClientId = this.Settings.ClientID,
+                ClientSecret = this.Settings.ClientSecret
+            }, scopes, this.UserID, CancellationToken.None ).Result;
+
+            this.LogIt( "Authorization granted or not required (if the saved access token already available)" );
+
+            if ( credential.Token.IsExpired( credential.Flow.Clock ) )
+            {
+                this.LogIt( "The access token has expired, refreshing it" );
+
+                if ( credential.RefreshTokenAsync( CancellationToken.None ).Result )
+                {
+                    this.LogIt( "The access token is now refreshed" );
+                }
+                else
+                {
+                    this.LogIt( "The access token has expired but we can't refresh it" );
+                    return false;
+                }
+            }
+            else
+            {
+                this.LogIt( "access token OK - continue" );
+            }
+
+            // init the host
+            this.Host = new GmailService( new BaseClientService.Initializer() { HttpClientInitializer = credential } );
+
+            return true;
+        }
+
+        /// <summary>Get the headers of the last Top emails from the inbox</summary>
         /// <returns></returns>
         protected ListMessagesResponse? ListMessages()
         {
+            // setup the request
             var req = this.Host?.Users.Messages.List( this.UserID );
 
             if ( req == null )
                 return null;
 
+            // set params
             req.MaxResults = this.Settings.Top;
             req.IncludeSpamTrash = false;
             req.Q = "is:inbox";
-            var response = req.Execute();
 
-            return response;
+            // get the list
+            return req.Execute();
         }
 
-        /// <summary></summary>
+        /// <summary>Download all the specified messages in Raw format</summary>
         /// <param name="msgs"></param>
         protected void DownloadMessages( IEnumerable<Message> msgs )
         {
@@ -170,9 +202,10 @@ namespace Raydreams.GMailer
         /// <param name="to"></param>
         protected Message? ForwardMessage( Message msg )
         {
+            // get the raw message as bytes
             byte[] bytes = msg.Raw.BASE64UrlDecode();
 
-            // setup a MIMEKit Message
+            // read into a MIMEKit Message
             var message = new MimeMessage();
             using MemoryStream inStream = new MemoryStream( bytes );
             message = MimeMessage.Load( inStream );
@@ -181,24 +214,28 @@ namespace Raydreams.GMailer
             if ( message.Body == null )
                 return null;
 
-            // save the old values for later use
-            OriginalHeader original = new OriginalHeader(message);
+            // save the old header values for later use
+            OriginalHeader original = new OriginalHeader( message );
 
-            // scan for the text areas and add the orginal info
-            foreach ( MimeEntity part in message.BodyParts)
+            // scan for the text parts and add the orginal header info back
+            foreach ( MimeEntity part in message.BodyParts )
             {
-                if ( part.ContentType.MimeType.Contains("text") && part is TextPart tp )
+                if ( part.ContentType.MimeType.Contains( "text" ) && part is TextPart tp )
                 {
+                    // plain text
                     if ( tp.IsPlain )
                         tp.Text = $"{original.ToPlainString()}{tp.Text}";
+                    // html
                     else if ( tp.IsHtml )
                     {
-                        // search for the body tag
+                        // search for a body tag
                         Match m = new Regex( @"<body(.+)>", RegexOptions.IgnoreCase ).Match( tp.Text );
 
+                        // set an index to write to
                         int idx = ( m.Success ) ? m.Index : 0;
-                        tp.Text = tp.Text.Insert( idx, original.ToHTMLHeader() );
+                        tp.Text = tp.Text.Insert( idx, original.ToHTMLString() );
                     }
+                    // ignore other formats for now
                 }
             }
 
@@ -206,9 +243,11 @@ namespace Raydreams.GMailer
             message.To.Clear();
             message.Cc.Clear();
             message.Bcc.Clear();
+
+            // add the new Forward To
             message.To.Add( this.ForwardTo );
 
-            // write back
+            // write a new message
             using MemoryStream outStream = new MemoryStream();
             message.WriteTo( outStream );
             outStream.Position = 0;
@@ -217,9 +256,24 @@ namespace Raydreams.GMailer
             Message forward = new Message() { Raw = outStream.ToArray().BASE64UrlEncode() };
 
             // send it
-            var sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
+            Message? sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
+
+            if ( sent == null )
+            {
+                this.LogIt( $"Wasn't able to forward message {msg.Id} with subject '{original.Subject}'" );
+                return null;
+            }
+
+            this.LogIt( $"Forwarded message {msg.Id} with subject '{original.Subject}'" );
 
             return sent;
+        }
+
+        /// <summary>Log method holder for now</summary>
+        /// <param name="message"></param>
+        protected void LogIt(string message)
+        {
+            Console.WriteLine( message );
         }
 
     }
