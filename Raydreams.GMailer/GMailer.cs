@@ -10,9 +10,10 @@ using System.Text.RegularExpressions;
 
 namespace Raydreams.GMailer
 {
-    /// <summary></summary>
-    public class GMailer
+    /// <summary>Main runner class for now</summary>
+    public class GMailer : IGMailer
     {
+        public const int MaxPageSize = 500;
 
         /// <summary>Constructor</summary>
         /// <param name="settings"></param>
@@ -31,16 +32,16 @@ namespace Raydreams.GMailer
         /// <summary>The mailbox to forward to</summary>
         public MailboxAddress? ForwardTo { get; set; }
 
-        /// <summary>GMail User ID</summary>
+        /// <summary>Alias to the GMail User ID in Settings</summary>
         public string? UserID => this.Settings.UserID;
 
         /// <summary>Mail Service</summary>
         protected GmailService? Host { get; set; }
 
-        /// <summary>List of downloaded Email Headers</summary>
+        /// <summary>List of downloaded Raw Emails</summary>
         protected List<Message> Messages { get; set; } = new List<Message>();
 
-        /// <summary>List of original email IDs that were forwarded</summary>
+        /// <summary>List of original email IDs that were forwarded - loaded from sent file</summary>
         protected List<string> AlreadyForwaded { get; set; } = new List<string>();
 
         /// <summary>List of email IDs sent this run</summary>
@@ -61,7 +62,7 @@ namespace Raydreams.GMailer
             this.AlreadyForwaded = new List<string>( io.LoadIDs() );
 
             // get messages from GMail
-            var msgIDs = this.ListMessages();
+            var msgIDs = this.ListMessages( this.Settings.MaxRead );
 
             if ( msgIDs == null )
                 return -1;
@@ -136,9 +137,12 @@ namespace Raydreams.GMailer
         }
 
         /// <summary>Get the headers of the last Top emails from the inbox</summary>
+        /// <param name="top">The maximum number of email headers to retrieve</param>
         /// <returns></returns>
-        protected List<Message> ListMessages()
+        public IEnumerable<Message> ListMessages( int top )
         {
+            top = Math.Clamp( top, 2, 10000 );
+
             List<Message> resultList = new List<Message>();
 
             // setup the request
@@ -148,7 +152,7 @@ namespace Raydreams.GMailer
                 return new List<Message>();
 
             // set params
-            req.MaxResults = ( this.Settings.MaxRead < 500 ) ? this.Settings.MaxRead : 500;
+            req.MaxResults = ( top < MaxPageSize ) ? top : MaxPageSize;
             req.IncludeSpamTrash = false;
             req.Q = "is:inbox";
 
@@ -176,7 +180,7 @@ namespace Raydreams.GMailer
 
         /// <summary>Download all the specified messages in Raw format</summary>
         /// <param name="msgs"></param>
-        protected void DownloadMessages( IEnumerable<Message> msgs )
+        public void DownloadMessages( IEnumerable<Message> msgs )
         {
             foreach ( Message msg in msgs )
             {
@@ -184,6 +188,7 @@ namespace Raydreams.GMailer
                 if ( this.AlreadyForwaded.Contains( msg.Id ) )
                     continue;
 
+                // queued the max number of emails to send
                 if ( this.Messages.Count >= this.Settings.MaxSend )
                     break;
 
@@ -202,10 +207,10 @@ namespace Raydreams.GMailer
             }
         }
 
-        /// <summary></summary>
+        /// <summary>Actually forward a message</summary>
         /// <param name="msg"></param>
         /// <param name="to"></param>
-        protected Message? ForwardMessage( Message msg )
+        public Message? ForwardMessage( Message msg )
         {
             // get the raw message as bytes
             byte[] bytes = msg.Raw.BASE64UrlDecode();
@@ -281,7 +286,7 @@ namespace Raydreams.GMailer
             Console.WriteLine( message );
         }
 
-        /// <summary></summary>
+        /// <summary>Log Exception holder for now</summary>
         /// <param name="exp"></param>
         protected void LogException( System.Exception exp )
         {

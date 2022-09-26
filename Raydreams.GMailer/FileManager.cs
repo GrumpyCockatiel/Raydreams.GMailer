@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.Reflection;
 using System.Text;
 
 namespace Raydreams.GMailer
@@ -10,11 +9,14 @@ namespace Raydreams.GMailer
         /// <summary>Path to the user's desktop folder</summary>
         public static readonly string DesktopPath = Environment.GetFolderPath( Environment.SpecialFolder.DesktopDirectory );
 
-        /// <summary>local app storage page</summary>
+        /// <summary>Gets the folder of the executing exe or program BUT only if this file is in the primary assembly.</summary>
+		public static string? AppRoot => Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location );
+
+		/// <summary>local app storage page</summary>
 #if MACOS
 		public static readonly string AppDataPath = Path.Combine(Environment.GetFolderPath( Environment.SpecialFolder.UserProfile), "Applications" );
 #else
-        public static readonly string AppDataPath = Environment.GetFolderPath( Environment.SpecialFolder.CommonApplicationData );
+		public static readonly string AppDataPath = Environment.GetFolderPath( Environment.SpecialFolder.CommonApplicationData );
 #endif
 
         /// <summary></summary>
