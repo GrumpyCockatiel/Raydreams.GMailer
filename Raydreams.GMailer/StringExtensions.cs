@@ -2,14 +2,13 @@
 
 namespace Raydreams.GMailer
 {
-    public static class StringExtensions
+    /// <summary>Some useful extensions.</summary>
+    public static class BASE64Extensions
     {
-        /// <summary>Encodes a byte array as BASE64 URL encoded</summary>
-        /// <remarks>This needs to move to Array Extensions</remarks>
+        /// <summary>Encodes a byte array as BASE64 URL encoded string</summary>
         public static string BASE64UrlEncode( this byte[] arg )
         {
             string s = Convert.ToBase64String( arg ); // Regular base64 encoder
-            //s = s.Split( '=' )[0];
             s = s.TrimEnd( '=' ); // remove any trailing =
             s = s.Replace( '+', '-' ); // 62nd char of encoding
             s = s.Replace( '/', '_' ); // 63rd char of encoding
@@ -17,8 +16,8 @@ namespace Raydreams.GMailer
         }
 
         /// <summary>Decodes a BASE64 URL encoded string back to its original bytes</summary>
-        /// <param name="arg"></param>
-        /// <returns></returns>
+        /// <param name="str">A BASE64 URL encoded string</param>
+        /// <returns>Decoded bytes</returns>
         public static byte[] BASE64UrlDecode( this string str )
         {
             str = str.Replace( '-', '+' ); // 62nd char of encoding
