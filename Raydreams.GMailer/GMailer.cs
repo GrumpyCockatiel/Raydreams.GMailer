@@ -12,6 +12,9 @@ using static Google.Apis.Requests.BatchRequest;
 namespace Raydreams.GMailer
 {
     /// <summary>Main runner class for now</summary>
+    /// <remarks>This is the only class that should reference MIMEKit
+    /// Break-up this class into an App Runner and IGmailer
+    /// </remarks>
     public class GMailer : IGMailer
     {
         public const int MaxPageSize = 500;
@@ -27,7 +30,7 @@ namespace Raydreams.GMailer
 
         #region [ Properties ]
 
-        /// <summary></summary>
+        /// <summary>Runtime settings to use</summary>
         private AppConfig Settings { get; set; }
 
         /// <summary>The mailbox to forward to</summary>
@@ -112,8 +115,11 @@ namespace Raydreams.GMailer
                 }
             }
 
+            this.LogMessage( $"Forwarded {this.Forwaded.Count} messages" );
+
             // append new sent email IDs to the save file
-            io.AppendIDs( this.Forwaded );
+            if ( io.AppendIDs( this.Forwaded ) > 0 )
+                this.LogMessage( $"Updated sent file" );
 
             return 0;
         }
