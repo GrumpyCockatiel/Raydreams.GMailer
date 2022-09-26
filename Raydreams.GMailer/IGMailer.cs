@@ -11,7 +11,8 @@ namespace Raydreams.GMailer
 		/// <summary></summary>
 		Message? DownloadMessage( Message msg );
 
-        /// <summary></summary>
-        Message? ForwardMessage( Message msg );
-	}
+		/// <summary></summary>
+		ForwardResults ForwardMessage( Message msg, bool prefixFW = true );
+
+    }
 }

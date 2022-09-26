@@ -38,12 +38,11 @@ namespace Raydreams.GMailer
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine( "________________________________   " );
-            //sb.AppendLine( $"TAG Digital Studios   " );
             sb.AppendLine( $"From: {this.From}   " );
-            sb.AppendLine( $"Subject: {this.Subject}   " );
             sb.AppendLine( $"Sent: {this.Date}   " );
             sb.AppendLine( $"To: {this.To}   " );
             sb.AppendLine( $"CC: {this.CC}   " );
+            sb.AppendLine( $"Subject: {this.Subject}   " );
             sb.AppendLine( "________________________________   " );
             sb.AppendLine( $"   " );
 
@@ -56,12 +55,11 @@ namespace Raydreams.GMailer
         {
             StringBuilder sb = new StringBuilder();
             sb.Append( "<p>" );
-            //sb.Append( $"TAG Digital Studios<br/>" );
-            sb.Append( $"From: {WebUtility.HtmlEncode( this.From )}<br/>" );
-            sb.Append( $"Subject: {this.Subject}<br/>" );
-            sb.Append( $"Sent: {this.Date}<br/>" );
-            sb.Append( $"To: {WebUtility.HtmlEncode( this.To )}<br/>" );
-            sb.Append( $"CC: {WebUtility.HtmlEncode( this.CC )}<br/>" );
+            sb.Append( $"<b>From:</b> {WebUtility.HtmlEncode( this.From )}<br/>" );
+            sb.Append( $"<b>Sent:</b> {this.Date}<br/>" );
+            sb.Append( $"<b>To:</b> {WebUtility.HtmlEncode( this.To )}<br/>" );
+            sb.Append( $"<b>CC:</b> {WebUtility.HtmlEncode( this.CC )}<br/>" );
+            sb.Append( $"<b>Subject:</b> {this.Subject}<br/>" );
             sb.Append( $"</p>" );
 
             return sb.ToString();

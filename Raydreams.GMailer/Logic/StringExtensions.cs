@@ -37,12 +37,12 @@ namespace Raydreams.GMailer
                 case 3:
                     str += "=";
                     break;
-                // hopefully this does not happen
+                // this shouldn't happen since the original input is BASE64
                 default:
-                    throw new System.Exception( "Illegal BASE64URL string!" );
+                    throw new System.Exception( "Illegal BASE64 URL string!" );
             }
 
-            return Convert.FromBase64String( str ); // Standard base64 decoder
+            return Convert.FromBase64String( str );
         }
     }
 }
