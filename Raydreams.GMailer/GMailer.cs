@@ -7,6 +7,7 @@ using Google.Apis.Services;
 using MimeKit;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace Raydreams.GMailer
 {
@@ -67,8 +68,29 @@ namespace Raydreams.GMailer
             if ( msgIDs == null )
                 return -1;
 
-            // download the last Top messages
-            this.DownloadMessages( msgIDs );
+            // download full orginal message in raw
+            foreach ( Message header in msgIDs )
+            {
+                try
+                {
+                    // if the message is already forwarded
+                    if ( this.AlreadyForwaded.Contains( header.Id ) )
+                        continue;
+
+                    // queued the max number of emails to send
+                    if ( this.Messages.Count >= this.Settings.MaxSend )
+                        break;
+
+                    var dl = this.DownloadMessage( header );
+
+                    if ( dl != null )
+                        this.Messages.Add( dl );
+                }
+                catch ( System.Exception exp )
+                {
+                    this.LogException( exp );
+                }
+            }
 
             this.LogMessage( $"Downloaded {this.Messages.Count} messages" );
 
@@ -178,33 +200,18 @@ namespace Raydreams.GMailer
             return resultList;
         }
 
-        /// <summary>Download all the specified messages in Raw format</summary>
-        /// <param name="msgs"></param>
-        public void DownloadMessages( IEnumerable<Message> msgs )
+        /// <summary>Just downloads a single message in Raw format</summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public Message? DownloadMessage( Message msg )
         {
-            foreach ( Message msg in msgs )
-            {
-                // if the message is already forwarded
-                if ( this.AlreadyForwaded.Contains( msg.Id ) )
-                    continue;
+            var req = this.Host?.Users.Messages.Get( this.UserID, msg.Id );
 
-                // queued the max number of emails to send
-                if ( this.Messages.Count >= this.Settings.MaxSend )
-                    break;
+            if ( req == null )
+                return null;
 
-                var req = this.Host?.Users.Messages.Get( this.UserID, msg.Id );
-
-                if ( req == null )
-                    continue;
-
-                req.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Raw;
-                var response = req.Execute();
-
-                if ( response == null )
-                    continue;
-
-                this.Messages.Add( response );
-            }
+            req.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Raw;
+            return req.Execute();
         }
 
         /// <summary>Actually forward a message</summary>

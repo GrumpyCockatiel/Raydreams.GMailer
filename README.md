@@ -26,6 +26,8 @@ I'll add intructions on how to do this later but it's pretty much like creating 
 
 You will need to add an `appsettings.json` file to your project with the added section **AppConfig** in the JSON root. You can hard code these values in the AppConfig Class to get started.
 
+Just add a new file called `appsettings.json` to the Project Level and set it's **Copy to Output Directory** property to `Always Copy`. Add your own Client ID, Client Secret, GMail Account ID and address you want to forward to.
+
 ```
 {
 "AppConfig": {
