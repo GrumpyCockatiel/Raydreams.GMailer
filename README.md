@@ -20,13 +20,15 @@ Forwarding an email is really just making a copy of an existing message, replaci
 
 You will need a GMail API Client ID and Secret which you can create on Google Cloud.
 
-I'll add intructions on how to do this later but it's pretty much like creating any other API Key.
+I'll add [intructions](https://developers.google.com/gmail/api/auth/web-server) on how to do this later but it's pretty much like creating any other API Key.
 
 ## App Configuration
 
-You will need to add an `appsettings.json` file to your project with the added section **AppConfig** in the JSON root. You can hard code these values in the AppConfig Class to get started.
+You will need to add an `appsettings.json` file to your project with the added section **AppConfig** in the JSON root. You can hard code these values in the AppConfig Class to get started. I use appsettings over App.config so I can load by Configuation.
 
 Just add a new file called `appsettings.json` to the Project Level and set it's **Copy to Output Directory** property to `Always Copy`. Add your own Client ID, Client Secret, GMail Account ID and address you want to forward to.
+
+Copy and Paste the below and edit:
 
 ```
 {
@@ -52,3 +54,11 @@ Just add a new file called `appsettings.json` to the Project Level and set it's 
 "AllowedHosts": "*"
 }
 ```
+
+## MIMEKit
+
+This implementation uses [MIMEKit](https://github.com/jstedfast/MimeKit). You are not required to use MIMEKit. You could use AE.Net.Mail. You just have to take a RAW MIME message and replace a few fields which is easier to do with a MIME parser. I'll abstract away the MIME Parser later so its easier to use whatever you like.
+
+## History File
+
+I simple forwarded emails txt file is saved to the Desktop for now. It's just easier to find while working on the app. Yes, a production app would save to a user's app space.

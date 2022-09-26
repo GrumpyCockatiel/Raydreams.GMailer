@@ -19,6 +19,7 @@ namespace Raydreams.GMailer
 
             int runResult = 0;
 
+            // lets do the thing
             try
             {
                 GMailer app = new GMailer( config );
