@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Text;
-using Google.Apis.Gmail.v1.Data;
 using MimeKit;
 
 namespace Raydreams.GMailer
