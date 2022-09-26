@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Raydreams.GMailer
 {
+    /// <summary>Handles simple file IO with the sent emails data file</summary>
     public class FileManager
     {
         /// <summary>Path to the user's desktop folder</summary>
