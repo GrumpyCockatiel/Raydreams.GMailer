@@ -4,10 +4,9 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Oauth2.v2;
 using Google.Apis.Services;
-using MimeKit;
 using System.Text;
 using System.Text.RegularExpressions;
-using static Google.Apis.Requests.BatchRequest;
+//using static Google.Apis.Requests.BatchRequest;
 
 namespace Raydreams.GMailer
 {
@@ -24,17 +23,12 @@ namespace Raydreams.GMailer
         public GMailer( AppConfig settings )
         {
             this.Settings = settings;
-
-            this.ForwardTo = new MailboxAddress( this.Settings.ForwardToName, this.Settings.ForwardToAddress );
         }
 
         #region [ Properties ]
 
         /// <summary>Runtime settings to use</summary>
         private AppConfig Settings { get; set; }
-
-        /// <summary>The mailbox to forward to</summary>
-        public MailboxAddress? ForwardTo { get; set; }
 
         /// <summary>Alias to the GMail User ID in Settings</summary>
         public string? UserID => this.Settings.UserID;
@@ -50,6 +44,9 @@ namespace Raydreams.GMailer
 
         /// <summary>List of email IDs sent this run</summary>
         protected List<string> Forwaded { get; set; } = new List<string>();
+
+        /// <summary>The MIME rewrite delegate to use</summary>
+        public RewriteMIME? Rewriter { get; set; }
 
         #endregion [ Properties ]
 
@@ -231,61 +228,17 @@ namespace Raydreams.GMailer
         /// <remarks>This is the only method where MIMEKit is used and needs to be broken out</remarks>
         public ForwardResults ForwardMessage( Message source, bool prefixFW = true )
         {
+            if ( this.Rewriter == null || String.IsNullOrWhiteSpace( this.Settings.ForwardToAddress ) )
+                return new ForwardResults();
+
             // get the raw message as bytes
             byte[] bytes = source.Raw.BASE64UrlDecode();
 
-            // read into a MIMEKit Message
-            var mimeMsg = new MimeMessage();
-            using MemoryStream inStream = new MemoryStream( bytes );
-            mimeMsg = MimeMessage.Load( inStream );
+            // rewrite the email with new data
+            (byte[] Message, OriginalHeader? Header) rewritten = this.Rewriter( bytes, this.Settings.ForwardToAddress, this.Settings.ForwardToName );
 
-            // check for null body
-            if ( mimeMsg.Body == null )
-                return new ForwardResults();
-
-            // save the old header values for later use
-            OriginalHeader original = new OriginalHeader( mimeMsg );
-
-            // scan for the text parts and add the orginal header info back
-            foreach ( MimeEntity part in mimeMsg.BodyParts )
-            {
-                if ( part.ContentType.MimeType.Contains( "text" ) && part is TextPart tp )
-                {
-                    // plain text
-                    if ( tp.IsPlain )
-                        tp.Text = $"{original.ToPlainString()}{tp.Text}";
-                    // html
-                    else if ( tp.IsHtml )
-                    {
-                        // search for a body tag
-                        Match m = new Regex( @"<body(.+)>", RegexOptions.IgnoreCase ).Match( tp.Text );
-
-                        // set an index to write to
-                        int idx = ( m.Success ) ? m.Index : 0;
-                        tp.Text = tp.Text.Insert( idx, original.ToHTMLString() );
-                    }
-                    // ignore other formats for now
-                }
-            }
-
-            // now clear the old values
-            mimeMsg.To.Clear();
-            mimeMsg.Cc.Clear();
-            mimeMsg.Bcc.Clear();
-
-            // add the new Forward To
-            mimeMsg.To.Add( this.ForwardTo );
-
-            if ( prefixFW )
-                mimeMsg.Subject = $"FW: {mimeMsg.Subject}";
-
-            // write a new message
-            using MemoryStream outStream = new MemoryStream();
-            mimeMsg.WriteTo( outStream );
-            outStream.Position = 0;
-
-            // make a new message
-            Message forward = new Message() { Raw = outStream.ToArray().BASE64UrlEncode() };
+            // make a new message from raw bytes
+            Message forward = new Message() { Raw = rewritten.Message.BASE64UrlEncode() };
             
             // send the message
             Message? sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
@@ -293,7 +246,7 @@ namespace Raydreams.GMailer
             if ( sent == null )
                 return new ForwardResults();
 
-            return new ForwardResults { OriginalID = source.Id, OriginalSubject = original.Subject };
+            return new ForwardResults { OriginalID = source.Id, OriginalSubject = rewritten.Header?.Subject };
         }
 
         /// <summary>Log method holder for now</summary>
@@ -322,4 +275,3 @@ namespace Raydreams.GMailer
         }
     }
 }
-

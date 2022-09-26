@@ -26,14 +26,14 @@ namespace Raydreams.GMailer
         public string? UserID { get; set; }
 
         /// <summary>The email address to forward to</summary>
-        public string ForwardToAddress
+        public string? ForwardToAddress { get; set; }
+
+        /// <summary>The name of the person to forward to</summary>
+        public string ForwardToName
         {
             get => !String.IsNullOrWhiteSpace( this._toName ) ? this._toName.Trim() : "unknown";
             set => this._toName = value;
         }
-
-        /// <summary>The name of the person to forward to</summary>
-        public string? ForwardToName { get; set; }
 
         /// <summary>GMail API Client ID</summary>
         public string? ClientID { get; set; }
