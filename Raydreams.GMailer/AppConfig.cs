@@ -13,6 +13,8 @@ namespace Raydreams.GMailer
 
         private string _file = "MySentEmails";
 
+        #region [ Properties ]
+
         /// <summary>What environment is this</summary>
         public string Environment { get; set; } = "DEV";
 
@@ -36,13 +38,14 @@ namespace Raydreams.GMailer
         public string? ClientSecret { get; set; }
 
         /// <summary>Base name of the file to use for recording sent emails IDs.</summary>
+        /// <remarks>Don't include the extension in the Settings file</remarks>
         public string SentFile
         {
             get => !String.IsNullOrWhiteSpace( this._file ) ? $"{this._file.Trim()}.txt" : "MySentEmails.txt";
             set => this._file = value;
         }
 
-        /// <summary>The maximum number of emails to read from the source</summary>
+        /// <summary>The maximum number of email headers to read from the mailbox</summary>
         public int MaxRead
         {
             set => this._top = value;
@@ -55,6 +58,8 @@ namespace Raydreams.GMailer
             set => this._send = value;
             get => Math.Clamp( this._send, 1, 500 );
         }
+
+        #endregion [ Properties ]
     }
 }
 

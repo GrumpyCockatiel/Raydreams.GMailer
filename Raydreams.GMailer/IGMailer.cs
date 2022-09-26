@@ -9,9 +9,9 @@ namespace Raydreams.GMailer
 		IEnumerable<Message> ListMessages( int top );
 
 		/// <summary></summary>
-		void DownloadMessages( IEnumerable<Message> msgs );
+		Message? DownloadMessage( Message msg );
 
-		/// <summary></summary>
-		Message? ForwardMessage( Message msg );
+        /// <summary></summary>
+        Message? ForwardMessage( Message msg );
 	}
 }
