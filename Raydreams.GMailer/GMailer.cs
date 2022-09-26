@@ -67,20 +67,13 @@ namespace Raydreams.GMailer
                 return -1;
 
             // download the last Top messages
-            this.DownloadMessages( msgIDs.Messages );
+            this.DownloadMessages( msgIDs );
 
-            this.LogMessage( $"Downloaded {msgIDs.Messages.Count} messages" );
+            this.LogMessage( $"Downloaded {this.Messages.Count} messages" );
 
             // forward all the emails
             foreach ( Message next in this.Messages )
             {
-                if ( this.Forwaded.Count >= this.Settings.MaxSend )
-                    break;
-
-                // has it already been sent
-                if ( this.AlreadyForwaded.Contains( next.Id ) )
-                    continue;
-
                 try
                 {
                     // forward it
@@ -144,21 +137,41 @@ namespace Raydreams.GMailer
 
         /// <summary>Get the headers of the last Top emails from the inbox</summary>
         /// <returns></returns>
-        protected ListMessagesResponse? ListMessages()
+        protected List<Message> ListMessages()
         {
+            List<Message> resultList = new List<Message>();
+
             // setup the request
             var req = this.Host?.Users.Messages.List( this.UserID );
 
             if ( req == null )
-                return null;
+                return new List<Message>();
 
             // set params
-            req.MaxResults = this.Settings.MaxRead;
+            req.MaxResults = ( this.Settings.MaxRead < 500 ) ? this.Settings.MaxRead : 500;
             req.IncludeSpamTrash = false;
             req.Q = "is:inbox";
 
-            // get the list
-            return req.Execute();
+            ListMessagesResponse resp;
+
+            do
+            {
+                // get the list
+                resp = req.Execute();
+
+                if ( resp?.Messages == null || resp.Messages.Count < 1 )
+                    break;
+
+                resultList.AddRange( resp.Messages );
+
+                if ( !String.IsNullOrWhiteSpace( resp.NextPageToken ) )
+                    req.PageToken = resp.NextPageToken;
+                else
+                    break;
+
+            } while ( resultList.Count < this.Settings.MaxRead );
+
+            return resultList;
         }
 
         /// <summary>Download all the specified messages in Raw format</summary>
@@ -167,6 +180,13 @@ namespace Raydreams.GMailer
         {
             foreach ( Message msg in msgs )
             {
+                // if the message is already forwarded
+                if ( this.AlreadyForwaded.Contains( msg.Id ) )
+                    continue;
+
+                if ( this.Messages.Count >= this.Settings.MaxSend )
+                    break;
+
                 var req = this.Host?.Users.Messages.Get( this.UserID, msg.Id );
 
                 if ( req == null )

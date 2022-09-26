@@ -46,7 +46,7 @@ namespace Raydreams.GMailer
         public int MaxRead
         {
             set => this._top = value;
-            get => Math.Clamp( this._top, 1, 500 );
+            get => Math.Clamp( this._top, 2, 10000 );
         }
 
         /// <summary>The maximum number of emails to forward in one single run</summary>
