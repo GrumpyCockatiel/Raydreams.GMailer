@@ -10,6 +10,10 @@ C#/.NET 6
 
 As a GMail user I want to bulk forward several emails from one of my GMail accounts to any other email address, preserving all the attachments and original sender. I don't want to use a 3rd party tool which might 'phone home' my emails because I'm not a gullible idiot.
 
+# Overview
+
+Bulk forward emails from a GMail account to any other email account. Email IDs that have been forwarded are stored in a local file so you can forward large mailboxes in multiple smaller runs.
+
 ## GMail API Key
 
 You will need a GMail API Client ID and Secret which you can create on Google Cloud.
@@ -29,7 +33,9 @@ You will need to add an `appsettings.json` file to your project with the added s
     "ForwardToAddress": "bubbajack@outlook.com",
     "ClientID": "<My GMail API Client ID>",
     "ClientSecret": "<My GMail API Secret>",
-    "Top": 10
+    "MaxRead": 500,
+    "MaxSend": 10,
+    "SentFile": "MySentEmails"
 },
 "ConnectionStrings": {
     "DefaultConnection": "DataSource=app.db"

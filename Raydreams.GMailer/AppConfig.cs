@@ -7,7 +7,11 @@ namespace Raydreams.GMailer
     {
         private int _top = 1;
 
+        private int _send = 1;
+
         private string _toName = "unknown";
+
+        private string _file = "MySentEmails";
 
         /// <summary>What environment is this</summary>
         public string Environment { get; set; } = "DEV";
@@ -31,13 +35,26 @@ namespace Raydreams.GMailer
         /// <summary>GMail API Secret</summary>
         public string? ClientSecret { get; set; }
 
-        /// <summary>The number of messages to read sorted descendding most recent</summary>
-        public int Top
+        /// <summary>Base name of the file to use for recording sent emails IDs.</summary>
+        public string SentFile
         {
-            set => this._top = value;
-            get => Math.Clamp( this._top, 1, 500 );
+            get => !String.IsNullOrWhiteSpace( this._file ) ? $"{this._file.Trim()}.txt" : "MySentEmails.txt";
+            set => this._file = value;
         }
 
+        /// <summary>The maximum number of emails to read from the source</summary>
+        public int MaxRead
+        {
+            set => this._top = value;
+            get => Math.Clamp( this._top, 2, 10000 );
+        }
+
+        /// <summary>The maximum number of emails to forward in one single run</summary>
+        public int MaxSend
+        {
+            set => this._send = value;
+            get => Math.Clamp( this._send, 1, 500 );
+        }
     }
 }
 
