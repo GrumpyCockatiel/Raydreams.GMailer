@@ -106,8 +106,13 @@ namespace Raydreams.GMailer
                     var forwardResults = this.ForwardMessage( next );
 
                     // add the ID of forwarded messages to a list
-                    if ( forwardResults != null )
+                    if ( forwardResults.IsSuccess )
+                    {
                         this.Forwaded.Add( next.Id );
+                        this.LogMessage( $"Forwarded message {next.Id} with subject '{forwardResults.OriginalSubject}'" );
+                    }
+                    else
+                        this.LogMessage( $"Wasn't able to forward message {next.Id} with subject '{forwardResults.OriginalSubject}'" );
                 }
                 catch ( System.Exception exp )
                 {
@@ -221,27 +226,28 @@ namespace Raydreams.GMailer
         }
 
         /// <summary>Actually forward a message</summary>
-        /// <param name="msg"></param>
-        /// <param name="to"></param>
-        public Message? ForwardMessage( Message msg )
+        /// <param name="source">The original message</param>
+        /// <param name="prefixFW">Prefix the Subject with FW</param>
+        /// <remarks>This is the only method where MIMEKit is used and needs to be broken out</remarks>
+        public ForwardResults ForwardMessage( Message source, bool prefixFW = true )
         {
             // get the raw message as bytes
-            byte[] bytes = msg.Raw.BASE64UrlDecode();
+            byte[] bytes = source.Raw.BASE64UrlDecode();
 
             // read into a MIMEKit Message
-            var message = new MimeMessage();
+            var mimeMsg = new MimeMessage();
             using MemoryStream inStream = new MemoryStream( bytes );
-            message = MimeMessage.Load( inStream );
+            mimeMsg = MimeMessage.Load( inStream );
 
             // check for null body
-            if ( message.Body == null )
-                return null;
+            if ( mimeMsg.Body == null )
+                return new ForwardResults();
 
             // save the old header values for later use
-            OriginalHeader original = new OriginalHeader( message );
+            OriginalHeader original = new OriginalHeader( mimeMsg );
 
             // scan for the text parts and add the orginal header info back
-            foreach ( MimeEntity part in message.BodyParts )
+            foreach ( MimeEntity part in mimeMsg.BodyParts )
             {
                 if ( part.ContentType.MimeType.Contains( "text" ) && part is TextPart tp )
                 {
@@ -263,33 +269,31 @@ namespace Raydreams.GMailer
             }
 
             // now clear the old values
-            message.To.Clear();
-            message.Cc.Clear();
-            message.Bcc.Clear();
+            mimeMsg.To.Clear();
+            mimeMsg.Cc.Clear();
+            mimeMsg.Bcc.Clear();
 
             // add the new Forward To
-            message.To.Add( this.ForwardTo );
+            mimeMsg.To.Add( this.ForwardTo );
+
+            if ( prefixFW )
+                mimeMsg.Subject = $"FW: {mimeMsg.Subject}";
 
             // write a new message
             using MemoryStream outStream = new MemoryStream();
-            message.WriteTo( outStream );
+            mimeMsg.WriteTo( outStream );
             outStream.Position = 0;
 
             // make a new message
             Message forward = new Message() { Raw = outStream.ToArray().BASE64UrlEncode() };
-
-            // send it
+            
+            // send the message
             Message? sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
 
             if ( sent == null )
-            {
-                this.LogMessage( $"Wasn't able to forward message {msg.Id} with subject '{original.Subject}'" );
-                return null;
-            }
+                return new ForwardResults();
 
-            this.LogMessage( $"Forwarded message {msg.Id} with subject '{original.Subject}'" );
-
-            return sent;
+            return new ForwardResults { OriginalID = source.Id, OriginalSubject = original.Subject };
         }
 
         /// <summary>Log method holder for now</summary>

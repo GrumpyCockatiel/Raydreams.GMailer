@@ -16,6 +16,8 @@ Bulk forward emails from a GMail account to any other email account. Email IDs t
 
 Forwarding an email is really just making a copy of an existing message, replacing the TO header, stripping out the CC, and optionally just adding the original TO/FROM info to the body of the new message.
 
+You can read more on the [GMail API Documentation](https://developers.google.com/gmail/api/reference/rest)
+
 ## GMail API Key
 
 You will need a GMail API Client ID and Secret which you can create on Google Cloud.
@@ -41,7 +43,8 @@ Copy and Paste the below and edit:
     "ClientSecret": "<My GMail API Secret>",
     "MaxRead": 500,
     "MaxSend": 10,
-    "SentFile": "MySentEmails"
+    "SentFile": "MySentEmails",
+    "PrefixFW":  true
 },
 "ConnectionStrings": {
     "DefaultConnection": "DataSource=app.db"

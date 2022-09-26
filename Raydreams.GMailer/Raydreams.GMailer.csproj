@@ -17,6 +17,8 @@
     <None Remove="Microsoft.Extensions.Configuration.Json" />
     <None Remove="Microsoft.Extensions.Configuration.Binder" />
     <None Remove="MimeKit" />
+    <None Remove="Model\" />
+    <None Remove="Logic\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Gmail.v1" Version="1.57.0.2650" />
@@ -30,5 +32,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\" />
+    <Folder Include="Logic\" />
   </ItemGroup>
 </Project>

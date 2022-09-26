@@ -5,6 +5,8 @@ namespace Raydreams.GMailer
     /// <summary>Loads config values from the App Settings JSON environment files</summary>
     public class AppConfig
     {
+        #region [ Fields ]
+
         private int _top = 1;
 
         private int _send = 1;
@@ -12,6 +14,8 @@ namespace Raydreams.GMailer
         private string _toName = "unknown";
 
         private string _file = "MySentEmails";
+
+        #endregion [ Fields ]
 
         #region [ Properties ]
 
@@ -58,6 +62,9 @@ namespace Raydreams.GMailer
             set => this._send = value;
             get => Math.Clamp( this._send, 1, 500 );
         }
+
+        /// <summary>If set to true, will prefix the forwarded subject with FW:</summary>
+        public bool PrefixFW { get; set; }
 
         #endregion [ Properties ]
     }
