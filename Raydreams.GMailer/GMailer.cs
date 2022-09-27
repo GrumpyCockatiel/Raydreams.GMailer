@@ -46,7 +46,7 @@ namespace Raydreams.GMailer
         protected List<string> Forwaded { get; set; } = new List<string>();
 
         /// <summary>The MIME rewrite delegate to use</summary>
-        public RewriteMIME? Rewriter { get; set; }
+        public IMIMERewriter? Rewriter { get; set; }
 
         #endregion [ Properties ]
 
@@ -110,6 +110,17 @@ namespace Raydreams.GMailer
                     }
                     else
                         this.LogMessage( $"Wasn't able to forward message {next.Id} with subject '{forwardResults.OriginalSubject}'" );
+
+                    //this.ForwardMessageAsync( next ).ContinueWith( t => {
+                    //    if ( t.Result.IsSuccess )
+                    //    {
+                    //        this.Forwaded.Add( next.Id );
+                    //        this.LogMessage( $"Forwarded message {next.Id} with subject '{t.Result.OriginalSubject}'" );
+                    //    }
+                    //    else
+                    //        this.LogMessage( $"Wasn't able to forward message {next.Id} with subject '{t.Result.OriginalSubject}'" );
+                    //} );
+
                 }
                 catch ( System.Exception exp )
                 {
@@ -224,9 +235,8 @@ namespace Raydreams.GMailer
 
         /// <summary>Actually forward a message</summary>
         /// <param name="source">The original message</param>
-        /// <param name="prefixFW">Prefix the Subject with FW</param>
         /// <remarks>This is the only method where MIMEKit is used and needs to be broken out</remarks>
-        public ForwardResults ForwardMessage( Message source, bool prefixFW = true )
+        public ForwardResults ForwardMessage( Message source )
         {
             if ( this.Rewriter == null || String.IsNullOrWhiteSpace( this.Settings.ForwardToAddress ) )
                 return new ForwardResults();
@@ -235,13 +245,43 @@ namespace Raydreams.GMailer
             byte[] bytes = source.Raw.BASE64UrlDecode();
 
             // rewrite the email with new data
-            (byte[] Message, OriginalHeader? Header) rewritten = this.Rewriter( bytes, this.Settings.ForwardToAddress, this.Settings.ForwardToName );
+            (byte[] Message, OriginalHeader? Header) rewritten = this.Rewriter.RewriteMIME( bytes, this.Settings.ForwardToAddress, this.Settings.ForwardToName );
 
             // make a new message from raw bytes
             Message forward = new Message() { Raw = rewritten.Message.BASE64UrlEncode() };
             
             // send the message
             Message? sent = this.Host?.Users.Messages.Send( forward, this.UserID ).Execute();
+
+            if ( sent == null )
+                return new ForwardResults();
+
+            return new ForwardResults { OriginalID = source.Id, OriginalSubject = rewritten.Header?.Subject };
+        }
+
+        /// <summary>Actually forward a message</summary>
+        /// <param name="source">The original message</param>
+        /// <remarks>This is the only method where MIMEKit is used and needs to be broken out</remarks>
+        public async Task<ForwardResults> ForwardMessageAsync( Message source )
+        {
+            if ( this.Rewriter == null || String.IsNullOrWhiteSpace( this.Settings.ForwardToAddress ) )
+                return new ForwardResults();
+
+            // get the raw message as bytes
+            byte[] bytes = source.Raw.BASE64UrlDecode();
+
+            // rewrite the email with new data
+            (byte[] Message, OriginalHeader? Header) rewritten = this.Rewriter.RewriteMIME( bytes, this.Settings.ForwardToAddress, this.Settings.ForwardToName );
+
+            // make a new message from raw bytes
+            Message forward = new Message() { Raw = rewritten.Message.BASE64UrlEncode() };
+
+            // send the message
+            var req = this.Host?.Users.Messages.Send( forward, this.UserID );
+            if ( req == null )
+                return new ForwardResults();
+
+            Message sent = await req.ExecuteAsync();
 
             if ( sent == null )
                 return new ForwardResults();
