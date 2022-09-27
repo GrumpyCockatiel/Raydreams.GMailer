@@ -5,8 +5,6 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Oauth2.v2;
 using Google.Apis.Services;
 using System.Text;
-using System.Text.RegularExpressions;
-//using static Google.Apis.Requests.BatchRequest;
 
 namespace Raydreams.GMailer
 {
