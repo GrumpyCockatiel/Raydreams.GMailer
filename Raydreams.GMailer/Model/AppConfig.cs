@@ -51,7 +51,8 @@ namespace Raydreams.GMailer
             set => this._file = value;
         }
 
-        /// <summary>If not empty is added to the beginning of the Subject</summary>
+        /// <summary>If not empty is added to the beginning of the Subject. Limited to 16 characters</summary>
+        /// <remarks>This can be values like FW: or any label you want</remarks>
         public string SubjectPrefix
         {
             get => !String.IsNullOrWhiteSpace( this._prefix ) ? this._prefix : String.Empty;
@@ -71,9 +72,6 @@ namespace Raydreams.GMailer
             set => this._send = value;
             get => Math.Clamp( this._send, 1, 500 );
         }
-
-        /// <summary>If set to true, will prefix the forwarded subject with FW:</summary>
-        public bool PrefixFW { get; set; }
 
         #endregion [ Properties ]
     }

@@ -7,22 +7,20 @@ namespace Raydreams.GMailer
     /// <summary></summary>
     public interface IMIMERewriter
     {
+        string? SubjectPrefix { get; set; }
+
         /// <summary>Rewriting a MIME email is left as a delegate so you can use different dependencies</summary>
-        public (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
+        (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
     }
 
     /// <summary></summary>
     public class MIMEKitRewriter : IMIMERewriter
     {
         /// <summary></summary>
-        public MIMEKitRewriter( bool addFW = true, string? prefix = null )
+        public MIMEKitRewriter( string? prefix = null )
         {
-            this.PrefixFW = addFW;
             this.SubjectPrefix = prefix;
         }
-
-        /// <summary>Prefix subject with RE</summary>
-        public bool PrefixFW { get; set; } = true;
 
         /// <summary>Prefix subject with RE</summary>
         public string? SubjectPrefix { get; set; } = String.Empty;
@@ -84,11 +82,9 @@ namespace Raydreams.GMailer
             // add the new Forward To
             mimeMsg.To.Add( to );
 
-            if ( !String.IsNullOrWhiteSpace(this.SubjectPrefix) )
+            // add any prefix
+            if ( !String.IsNullOrWhiteSpace( this.SubjectPrefix ) )
                 mimeMsg.Subject = $"{this.SubjectPrefix} {mimeMsg.Subject}";
-
-            if ( this.PrefixFW )
-                mimeMsg.Subject = $"FW: {mimeMsg.Subject}";
 
             // write a new message
             using MemoryStream outStream = new MemoryStream();
