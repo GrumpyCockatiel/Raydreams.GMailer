@@ -4,21 +4,35 @@ using MimeKit;
 
 namespace Raydreams.GMailer
 {
-    /// <summary>Rewriting a MIME email is left as a delegate so you can use different dependencies</summary>
-    public delegate (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
+    /// <summary></summary>
+    public interface IMIMERewriter
+    {
+        /// <summary>Rewriting a MIME email is left as a delegate so you can use different dependencies</summary>
+        public (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
+    }
 
     /// <summary></summary>
-    public static class MIMEKitRewriter
+    public class MIMEKitRewriter : IMIMERewriter
     {
+        /// <summary></summary>
+        public MIMEKitRewriter( bool addFW = true, string? prefix = null )
+        {
+            this.PrefixFW = addFW;
+            this.SubjectPrefix = prefix;
+        }
+
         /// <summary>Prefix subject with RE</summary>
-        public static bool PrefixFW = true;
+        public bool PrefixFW { get; set; } = true;
+
+        /// <summary>Prefix subject with RE</summary>
+        public string? SubjectPrefix { get; set; } = String.Empty;
 
         /// <summary>Rewrite a MIME email</summary>
         /// <param name="inMime">bytes of the source message</param>
         /// <param name="toAddress">New forward to address</param>
         /// <param name="name">name to forward to</param>
         /// <returns></returns>
-        public static (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name = "anonymous" )
+        public (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name = "anonymous" )
         {
             // validate all the input
             if ( inMime == null || inMime.Length < 1 || String.IsNullOrWhiteSpace( toAddress ) )
@@ -70,7 +84,10 @@ namespace Raydreams.GMailer
             // add the new Forward To
             mimeMsg.To.Add( to );
 
-            if ( PrefixFW )
+            if ( !String.IsNullOrWhiteSpace(this.SubjectPrefix) )
+                mimeMsg.Subject = $"{this.SubjectPrefix} {mimeMsg.Subject}";
+
+            if ( this.PrefixFW )
                 mimeMsg.Subject = $"FW: {mimeMsg.Subject}";
 
             // write a new message

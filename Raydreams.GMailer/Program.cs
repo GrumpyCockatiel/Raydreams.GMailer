@@ -23,9 +23,10 @@ namespace Raydreams.GMailer
             try
             {
                 // setup everything
-                GMailer app = new GMailer( config );
-                app.Rewriter = MIMEKitRewriter.RewriteMIME;
-                MIMEKitRewriter.PrefixFW = config.PrefixFW;
+                GMailer app = new GMailer( config )
+                {
+                    Rewriter = new MIMEKitRewriter( config.PrefixFW, config.SubjectPrefix )
+                };
 
                 // run it
                 runResult = app.Run();

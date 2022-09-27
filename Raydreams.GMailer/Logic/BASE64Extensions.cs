@@ -44,6 +44,16 @@ namespace Raydreams.GMailer
 
             return Convert.FromBase64String( str );
         }
+
+        /// <summary>Truncates a string to the the specified length or less</summary>
+        public static string Truncate( this string str, int length, bool trim = true )
+        {
+            // if greater than length
+            if ( str.Length > length )
+                return ( trim ) ? str.Trim().Substring( 0, length ) : str.Substring( 0, length );
+
+            return ( trim ) ? str.Trim() : str;
+        }
     }
 }
 
