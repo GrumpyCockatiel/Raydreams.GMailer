@@ -44,7 +44,8 @@ Copy and Paste the below and edit:
     "MaxRead": 500,
     "MaxSend": 10,
     "SentFile": "MySentEmails",
-    "PrefixFW":  true
+    "PrefixFW":  true,
+    "SubjectPrefix": "[Subject Prefix]"
 },
 "ConnectionStrings": {
     "DefaultConnection": "DataSource=app.db"
