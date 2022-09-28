@@ -37,8 +37,9 @@ namespace Raydreams.GMailer
                 services.AddOptions();
                 
                 // get the app config file
-                var section = ctx.Configuration.GetSection( "AppConfig" );
-                services.AddScoped<AppConfig>( p => { return section.Get<AppConfig>(); } );
+                services.AddScoped<AppConfig>( p => {
+                    return ctx.Configuration.GetSection( "AppConfig" ).Get<AppConfig>();
+                } );
 
                 // add the re-writer
                 services.AddScoped<IMIMERewriter, MIMEKitRewriter>( p =>{

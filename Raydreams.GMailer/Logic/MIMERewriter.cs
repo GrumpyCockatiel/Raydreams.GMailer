@@ -4,7 +4,7 @@ using MimeKit;
 
 namespace Raydreams.GMailer
 {
-    /// <summary></summary>
+    /// <summary>Interface for rewriting a MIME message</summary>
     public interface IMIMERewriter
     {
         string SubjectPrefix { get; set; }
@@ -13,7 +13,7 @@ namespace Raydreams.GMailer
         (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
     }
 
-    /// <summary></summary>
+    /// <summary>MIMEKit implementation of MIMERewriter</summary>
     public class MIMEKitRewriter : IMIMERewriter
     {
         #region [ Fields ]
@@ -23,13 +23,14 @@ namespace Raydreams.GMailer
         #endregion [ Fields ]
 
         /// <summary></summary>
+        public MIMEKitRewriter()
+        {
+        }
+
+        /// <summary></summary>
         public MIMEKitRewriter( string? prefix = null )
         {
             this.SubjectPrefix = prefix ?? String.Empty;
-        }
-
-        public MIMEKitRewriter()
-        {
         }
 
         /// <summary>Prefix subject with RE</summary>

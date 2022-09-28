@@ -63,14 +63,11 @@ namespace Raydreams.GMailer
             // lets do the thing
             try
             {
-                //this.Rewriter = new MIMEKitRewriter( "[Test]" );
-
-                // run it
                 res = this.Run();
             }
             catch ( System.Exception exp )
             {
-                Console.WriteLine( exp.Message );
+                this.LogException ( exp );
                 return Task.FromResult( -1 );
             }
 
