@@ -19,7 +19,9 @@ namespace Raydreams.GMailer
         public const int MaxPageSize = 500;
 
         /// <summary>Constructor</summary>
-        /// <param name="settings"></param>
+        /// <param name="settings">The app config values</param>
+        /// <param name="rewriter">The MIME Rewriter</param>
+        /// <param name="logger">Logger to use</param>
         public GMailer( AppConfig settings, IMIMERewriter rewriter, ILogger<GMailer> logger )
         {
             this.Logger = logger;
