@@ -8,9 +8,9 @@ namespace Raydreams.GMailer
     /// <summary>Bootstrap Class</summary>
     public static class Program
     {
-        /// <summary></summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
+        /// <summary>Main entry class</summary>
+        /// <param name="args">any future command line args</param>
+        /// <returns>exit value</returns>
         public static int Main( string[] args )
         {
             Console.WriteLine( "Starting..." );
@@ -39,6 +39,11 @@ namespace Raydreams.GMailer
                 // get the app config file
                 var section = ctx.Configuration.GetSection( "AppConfig" );
                 services.AddScoped<AppConfig>( p => { return section.Get<AppConfig>(); } );
+
+                // add the re-writer
+                services.AddScoped<IMIMERewriter, MIMEKitRewriter>( p =>{
+                    return ctx.Configuration.GetSection( "MIMERewriter" ).Get<MIMEKitRewriter>();
+                } );
 
                 // add the logger
                 services.AddLogging();

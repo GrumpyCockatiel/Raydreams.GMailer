@@ -20,10 +20,11 @@ namespace Raydreams.GMailer
 
         /// <summary>Constructor</summary>
         /// <param name="settings"></param>
-        public GMailer( AppConfig settings, ILogger<GMailer> logger )
+        public GMailer( AppConfig settings, IMIMERewriter rewriter, ILogger<GMailer> logger )
         {
             this.Logger = logger;
             this.Settings = settings;
+            this.Rewriter = rewriter;
         }
 
         #region [ Properties ]
@@ -50,7 +51,7 @@ namespace Raydreams.GMailer
         protected List<string> Forwaded { get; set; } = new List<string>();
 
         /// <summary>The MIME rewrite delegate to use</summary>
-        public IMIMERewriter? Rewriter { get; set; }
+        public IMIMERewriter Rewriter { get; set; }
 
         #endregion [ Properties ]
 
@@ -62,7 +63,7 @@ namespace Raydreams.GMailer
             // lets do the thing
             try
             {
-                this.Rewriter = new MIMEKitRewriter( this.Settings.SubjectPrefix );
+                //this.Rewriter = new MIMEKitRewriter( "[Test]" );
 
                 // run it
                 res = this.Run();
@@ -319,7 +320,7 @@ namespace Raydreams.GMailer
         /// <param name="message"></param>
         protected void LogMessage( string message )
         {
-            Console.WriteLine( message );
+            this.Logger.LogInformation( message );
         }
 
         /// <summary>Log Exception holder for now</summary>
@@ -337,7 +338,7 @@ namespace Raydreams.GMailer
                 msg.Append( exp.InnerException.StackTrace );
             }
 
-            Console.WriteLine( msg.ToString() );
+            this.Logger.LogError( exp, msg.ToString() );
         }
     }
 }
