@@ -5,6 +5,8 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Oauth2.v2;
 using Google.Apis.Services;
 using System.Text;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Raydreams.GMailer
 {
@@ -12,18 +14,22 @@ namespace Raydreams.GMailer
     /// <remarks>This is the only class that should reference MIMEKit
     /// Break-up this class into an App Runner and IGmailer
     /// </remarks>
-    public class GMailer : IGMailer
+    public class GMailer : BackgroundService, IGMailer
     {
         public const int MaxPageSize = 500;
 
         /// <summary>Constructor</summary>
         /// <param name="settings"></param>
-        public GMailer( AppConfig settings )
+        public GMailer( AppConfig settings, ILogger<GMailer> logger )
         {
+            this.Logger = logger;
             this.Settings = settings;
         }
 
         #region [ Properties ]
+
+        /// <summary></summary>
+        protected ILogger<GMailer> Logger { get; set; }
 
         /// <summary>Runtime settings to use</summary>
         private AppConfig Settings { get; set; }
@@ -47,6 +53,28 @@ namespace Raydreams.GMailer
         public IMIMERewriter? Rewriter { get; set; }
 
         #endregion [ Properties ]
+
+        /// <summary></summary>
+        protected override Task<int> ExecuteAsync( CancellationToken stoppingToken )
+        {
+            int res = 0;
+
+            // lets do the thing
+            try
+            {
+                this.Rewriter = new MIMEKitRewriter( this.Settings.SubjectPrefix );
+
+                // run it
+                res = this.Run();
+            }
+            catch ( System.Exception exp )
+            {
+                Console.WriteLine( exp.Message );
+                return Task.FromResult( -1 );
+            }
+
+            return Task.FromResult( res );
+        }
 
         /// <summary></summary>
         /// <returns></returns>
