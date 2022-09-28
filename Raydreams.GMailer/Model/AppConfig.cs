@@ -15,8 +15,6 @@ namespace Raydreams.GMailer
 
         private string _file = "MySentEmails";
 
-        private string _prefix = String.Empty;
-
         #endregion [ Fields ]
 
         #region [ Properties ]
@@ -49,14 +47,6 @@ namespace Raydreams.GMailer
         {
             get => !String.IsNullOrWhiteSpace( this._file ) ? $"{this._file.Trim()}.txt" : "MySentEmails.txt";
             set => this._file = value;
-        }
-
-        /// <summary>If not empty is added to the beginning of the Subject. Limited to 16 characters</summary>
-        /// <remarks>This can be values like FW: or any label you want</remarks>
-        public string SubjectPrefix
-        {
-            get => !String.IsNullOrWhiteSpace( this._prefix ) ? this._prefix : String.Empty;
-            set => this._prefix = !String.IsNullOrWhiteSpace( value ) ? value.Truncate( 16, false ) : String.Empty;
         }
 
         /// <summary>The maximum number of email headers to read from the mailbox</summary>
