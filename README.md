@@ -34,28 +34,30 @@ Copy and Paste the below and edit:
 
 ```
 {
-"AppConfig": {
-    "Environment": "DEV",
-    "UserID": "My.Gmail.Account@gmail.com",
-    "ForwardToName": "Bubba Jack",
-    "ForwardToAddress": "bubbajack@outlook.com",
-    "ClientID": "<My GMail API Client ID>",
-    "ClientSecret": "<My GMail API Secret>",
-    "MaxRead": 500,
-    "MaxSend": 10,
-    "SentFile": "MySentEmails",
-    "PrefixFW":  true,
-    "SubjectPrefix": "[Subject Prefix]"
-},
-"ConnectionStrings": {
-    "DefaultConnection": "DataSource=app.db"
-},
-"Logging": {
-    "LogLevel": {
-        "Default": "Warning"
+    "AppConfig": {
+        "Environment": "DEV",
+        "UserID": "tguillory@gmail.com",
+        "ForwardToName": "Tag",
+        "ForwardToAddress": "tag.guillory@outlook.com",
+        "ClientID": "646684488144-9rvcfr7pv05s8iu6vrqf441d05ifsif2.apps.googleusercontent.com",
+        "ClientSecret": "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",
+        "MaxRead": 1500,
+        "MaxSend": 3,
+        "SentFile": "MySentEmails"
+    },
+    "MIMERewriter": {
+        "SubjectPrefix": "[Test]"
+    },
+    "Logging": {
+        "Console": {
+            "LogLevel": {
+                "Default": "Information"
+            }
+        },
+        "LogLevel": {
+            "Default": "Warning"
+        }
     }
-},
-"AllowedHosts": "*"
 }
 ```
 
