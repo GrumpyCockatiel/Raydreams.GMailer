@@ -5,6 +5,8 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Oauth2.v2;
 using Google.Apis.Services;
 using System.Text;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Raydreams.GMailer
 {
@@ -12,18 +14,25 @@ namespace Raydreams.GMailer
     /// <remarks>This is the only class that should reference MIMEKit
     /// Break-up this class into an App Runner and IGmailer
     /// </remarks>
-    public class GMailer : IGMailer
+    public class GMailer : BackgroundService, IGMailer
     {
         public const int MaxPageSize = 500;
 
         /// <summary>Constructor</summary>
-        /// <param name="settings"></param>
-        public GMailer( AppConfig settings )
+        /// <param name="settings">The app config values</param>
+        /// <param name="rewriter">The MIME Rewriter</param>
+        /// <param name="logger">Logger to use</param>
+        public GMailer( AppConfig settings, IMIMERewriter rewriter, ILogger<GMailer> logger )
         {
+            this.Logger = logger;
             this.Settings = settings;
+            this.Rewriter = rewriter;
         }
 
         #region [ Properties ]
+
+        /// <summary></summary>
+        protected ILogger<GMailer> Logger { get; set; }
 
         /// <summary>Runtime settings to use</summary>
         private AppConfig Settings { get; set; }
@@ -44,9 +53,28 @@ namespace Raydreams.GMailer
         protected List<string> Forwaded { get; set; } = new List<string>();
 
         /// <summary>The MIME rewrite delegate to use</summary>
-        public IMIMERewriter? Rewriter { get; set; }
+        public IMIMERewriter Rewriter { get; set; }
 
         #endregion [ Properties ]
+
+        /// <summary></summary>
+        protected override Task<int> ExecuteAsync( CancellationToken stoppingToken )
+        {
+            int res = 0;
+
+            // lets do the thing
+            try
+            {
+                res = this.Run();
+            }
+            catch ( System.Exception exp )
+            {
+                this.LogException ( exp );
+                return Task.FromResult( -1 );
+            }
+
+            return Task.FromResult( res );
+        }
 
         /// <summary></summary>
         /// <returns></returns>
@@ -291,7 +319,7 @@ namespace Raydreams.GMailer
         /// <param name="message"></param>
         protected void LogMessage( string message )
         {
-            Console.WriteLine( message );
+            this.Logger.LogInformation( message );
         }
 
         /// <summary>Log Exception holder for now</summary>
@@ -309,7 +337,7 @@ namespace Raydreams.GMailer
                 msg.Append( exp.InnerException.StackTrace );
             }
 
-            Console.WriteLine( msg.ToString() );
+            this.Logger.LogError( exp, msg.ToString() );
         }
     }
 }

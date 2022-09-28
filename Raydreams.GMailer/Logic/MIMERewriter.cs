@@ -4,26 +4,41 @@ using MimeKit;
 
 namespace Raydreams.GMailer
 {
-    /// <summary></summary>
+    /// <summary>Interface for rewriting a MIME message</summary>
     public interface IMIMERewriter
     {
-        string? SubjectPrefix { get; set; }
+        string SubjectPrefix { get; set; }
 
         /// <summary>Rewriting a MIME email is left as a delegate so you can use different dependencies</summary>
         (byte[], OriginalHeader?) RewriteMIME( byte[] inMime, string toAddress, string? name );
     }
 
-    /// <summary></summary>
+    /// <summary>MIMEKit implementation of MIMERewriter</summary>
     public class MIMEKitRewriter : IMIMERewriter
     {
+        #region [ Fields ]
+
+        private string _prefix = String.Empty;
+
+        #endregion [ Fields ]
+
+        /// <summary></summary>
+        public MIMEKitRewriter()
+        {
+        }
+
         /// <summary></summary>
         public MIMEKitRewriter( string? prefix = null )
         {
-            this.SubjectPrefix = prefix;
+            this.SubjectPrefix = prefix ?? String.Empty;
         }
 
         /// <summary>Prefix subject with RE</summary>
-        public string? SubjectPrefix { get; set; } = String.Empty;
+        public string SubjectPrefix
+        {
+            get => !String.IsNullOrWhiteSpace( this._prefix ) ? this._prefix : String.Empty;
+            set => this._prefix = !String.IsNullOrWhiteSpace( value ) ? value.Truncate( 16, false ) : String.Empty;
+        }
 
         /// <summary>Rewrite a MIME email</summary>
         /// <param name="inMime">bytes of the source message</param>
