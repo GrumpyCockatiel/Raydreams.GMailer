@@ -21,6 +21,7 @@
     <None Remove="Logic\" />
     <None Remove="Microsoft.Extensions.DependencyInjection" />
     <None Remove="Microsoft.Extensions.Hosting" />
+    <None Remove="Properties\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Gmail.v1" Version="1.57.0.2650" />
@@ -36,9 +37,13 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Properties\launchSettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\" />
     <Folder Include="Logic\" />
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,9 @@ namespace Raydreams.GMailer
     /// <summary>Handles simple file IO with the sent emails data file</summary>
     public class FileManager
     {
+        /// <summary>file lock</summary>
+		private readonly object _fileLock = new object();
+
         /// <summary>Path to the user's desktop folder</summary>
         public static readonly string DesktopPath = Environment.GetFolderPath( Environment.SpecialFolder.DesktopDirectory );
 
@@ -28,10 +31,10 @@ namespace Raydreams.GMailer
             this.SentFile = new FileInfo( path );
         }
 
-        /// <summary></summary>
+        /// <summary>The file to use to record sent emails</summary>
         protected FileInfo SentFile { get; private set; }
 
-        /// <summary></summary>
+        /// <summary>Load all the IDs</summary>
         public IEnumerable<string> LoadIDs()
         {
             if ( !this.SentFile.Exists )
@@ -48,12 +51,16 @@ namespace Raydreams.GMailer
             }
         }
 
-        /// <summary></summary>
+        /// <summary>Append new IDs to the file</summary>
         public int AppendIDs( IEnumerable<string> ids )
         {
             try
             {
-                File.AppendAllLines( this.SentFile.FullName, ids );
+                lock ( _fileLock )
+                {
+                    File.AppendAllLines( this.SentFile.FullName, ids );
+                }
+
                 return ids.Count();
             }
             catch (System.Exception )

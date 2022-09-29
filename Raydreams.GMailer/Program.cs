@@ -15,6 +15,9 @@ namespace Raydreams.GMailer
         {
             Console.WriteLine( "Starting..." );
 
+            // get the environment var
+            string env = Environment.GetEnvironmentVariable( "ASPNETCORE_ENVIRONMENT" ) ?? "Development";
+
             // inject all the input
             IHostBuilder builder = new HostBuilder()
             .ConfigureLogging( (ctx, logging) =>
@@ -26,9 +29,10 @@ namespace Raydreams.GMailer
             } )
             .ConfigureAppConfiguration( ( ctx, config ) =>
             {
-                config.AddJsonFile( $"appsettings.json", false, true );
-                //.AddJsonFile( $"appsettings.{env}.json", true, true )
+                config.AddJsonFile( $"appsettings.json", false, true )
+                .AddJsonFile( $"appsettings.{env}.json", true, true );
                 config.AddEnvironmentVariables();
+
                 if ( args != null )
                     config.AddCommandLine( args );
             } )

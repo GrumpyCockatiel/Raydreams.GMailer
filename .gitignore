@@ -5,6 +5,8 @@
 
 # Azure Functions localsettings file
 local.settings.json
+
+## App Settings often contains senstive info
 appsettings.json
 
 # User-specific files
@@ -59,7 +61,7 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/Properties/launchSettings.json
+#**/Properties/launchSettings.json
 
 # StyleCop
 StyleCopReport.xml
