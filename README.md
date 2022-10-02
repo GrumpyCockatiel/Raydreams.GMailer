@@ -97,6 +97,6 @@ Now you can go back to **Create Credentials** and when you click Create choose t
 
 ![Create Client](./readme/Screen%20Shot%206.png)
 
-Finally, when you click Create you will get the **App Client ID** and **App Client Secret**.
+Finally, when you click Create you will get the **App Client ID** and **App Client Secret**. Download the JSON for safe keeping. **NEVER** give the client secret to anyone else and don't be stupid and embed it in a distributable client app like a desktop or mobile app. Once you leave this page you can not get the Client Secret again, only generate a new one.
 
 ![Client Secrets](./readme/Screen%20Shot%207.png)
