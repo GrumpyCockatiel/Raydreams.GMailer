@@ -8,10 +8,13 @@ namespace Raydreams.GMailer
 		/// <summary>Get a list of message headers</summary>
 		IEnumerable<Message> ListMessages( int top );
 
-		/// <summary></summary>
+		/// <summary>Get a single full message</summary>
 		Message? DownloadMessage( Message msg );
 
-		/// <summary></summary>
+		/// <summary>Send a Message formatted as a forward</summary>
 		ForwardResults ForwardMessage( Message msg );
+
+		/// <summary>Get all of a users GMail Labels</summary>
+		List<Label> ListLabels();
     }
 }

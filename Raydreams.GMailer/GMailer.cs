@@ -7,6 +7,8 @@ using Google.Apis.Services;
 using System.Text;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Google.Apis.Util.Store;
+using System.IO;
 
 namespace Raydreams.GMailer
 {
@@ -76,7 +78,7 @@ namespace Raydreams.GMailer
             return Task.FromResult( res );
         }
 
-        /// <summary></summary>
+        /// <summary>The main workflow</summary>
         /// <returns></returns>
         public int Run()
         {
@@ -87,6 +89,9 @@ namespace Raydreams.GMailer
             // load any sent emails
             FileManager io = new FileManager( this.Settings.SentFile );
             this.AlreadyForwaded = new List<string>( io.LoadIDs() );
+
+            // get all of this user's labels
+            var labels = this.ListLabels();
 
             // get messages from GMail
             var msgIDs = this.ListMessages( this.Settings.MaxRead );
@@ -169,12 +174,17 @@ namespace Raydreams.GMailer
         {
             string[] scopes = new string[] { "https://mail.google.com/", Oauth2Service.Scope.UserinfoEmail };
 
+            // creates a physical token file store in the format Google.Apis.Auth.OAuth2.Responses.TokenResponse-userid@gmail.com
+            // if not included -> on the Mac will create a file at ~home/.local/share/google-filedatastore/Google.Apis.Auth
+            // delete the token file to force a login again
+            var dataStore = new FileDataStore( Environment.GetFolderPath( Environment.SpecialFolder.DesktopDirectory ) );
+
             UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
             new ClientSecrets
             {
                 ClientId = this.Settings.ClientID,
                 ClientSecret = this.Settings.ClientSecret
-            }, scopes, this.UserID, CancellationToken.None ).Result;
+            }, scopes, this.UserID, CancellationToken.None).Result;
 
             this.LogMessage( "Authorization granted or not required (if the saved access token already available)" );
 
@@ -313,6 +323,16 @@ namespace Raydreams.GMailer
                 return new ForwardResults();
 
             return new ForwardResults { OriginalID = source.Id, OriginalSubject = rewritten.Header?.Subject };
+        }
+
+        /// <summary>Get all of a users GMail Labels</summary>
+        /// <returns></returns>
+        public List<Label> ListLabels()
+        {
+            // send the message
+            ListLabelsResponse? response = this.Host?.Users.Labels.List( this.UserID ).Execute();
+
+            return ( response != null ) ? response.Labels.ToList() : new List<Label>();
         }
 
         /// <summary>Log method holder for now</summary>
